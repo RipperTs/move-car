@@ -17,17 +17,54 @@
 
 ## 快速开始
 
-### 1. 安装依赖
+### 方式一：Python直接运行
+
+#### 1. 安装依赖
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. 启动服务
+#### 2. 启动服务
 
 ```bash
 python main.py
 ```
+
+### 方式二：Docker运行
+
+#### 本地构建镜像
+
+```bash
+# 构建Docker镜像
+docker build -t nuoche-app .
+
+# 运行容器
+docker run -d \
+  --name nuoche-code-app \
+  -p 8000:8000 \
+  -v $(pwd)/config.json:/app/config.json:ro \
+  nuoche-app
+```
+
+#### 使用Docker Compose（推荐）
+
+```bash
+# 启动服务
+docker-compose up -d
+
+# 查看日志
+docker-compose logs -f
+
+# 停止服务
+docker-compose down
+```
+
+**Docker Compose特点：**
+- 自动使用预构建镜像 `registry.cn-hangzhou.aliyuncs.com/ripper/move-car:latest`
+- 配置文件热更新（修改 `config.json` 后重启容器即可生效）
+- 包含健康检查和自动重启
+- 日志挂载到 `./logs` 目录
 
 ### 3. 访问应用
 
@@ -271,6 +308,61 @@ python main.py
 pip install gunicorn
 gunicorn -w 4 -b 0.0.0.0:8000 main:app
 ```
+
+### Docker部署（推荐）
+
+#### 使用Docker Compose（推荐）
+```bash
+# 启动服务（后台运行）
+docker-compose up -d
+
+# 查看服务状态
+docker-compose ps
+
+# 查看实时日志
+docker-compose logs -f nuoche-app
+
+# 重启服务（配置文件修改后）
+docker-compose restart
+
+# 停止并删除容器
+docker-compose down
+```
+
+#### 本地构建部署
+```bash
+# 1. 构建镜像
+docker build -t nuoche-app:latest .
+
+# 2. 创建并运行容器
+docker run -d \
+  --name nuoche-code-app \
+  -p 8000:8000 \
+  -v $(pwd)/config.json:/app/config.json:ro \
+  -v $(pwd)/logs:/app/logs \
+  --restart unless-stopped \
+  nuoche-app:latest
+
+# 3. 查看容器状态
+docker ps
+
+# 4. 查看日志
+docker logs -f nuoche-code-app
+```
+
+#### Docker部署注意事项
+1. **配置文件管理**: `config.json` 通过数据卷挂载，可以在宿主机直接修改
+2. **日志管理**: 日志文件挂载到 `./logs` 目录，便于查看和备份
+3. **健康检查**: 容器内置健康检查，会自动检测服务状态
+4. **自动重启**: 配置了 `unless-stopped` 重启策略，服务异常时自动重启
+5. **网络配置**: 容器内服务运行在8000端口，映射到宿主机8000端口
+
+#### 生产环境Docker配置建议
+1. **反向代理**: 建议使用Nginx作为反向代理，配置HTTPS
+2. **镜像管理**: 使用私有镜像仓库管理镜像版本
+3. **数据持久化**: 重要配置和日志文件进行数据卷挂载
+4. **监控告警**: 配置容器监控和告警机制
+5. **资源限制**: 根据需要设置容器资源限制
 
 ### 其他建议
 1. 配置HTTPS（推荐用于电话拨打功能）
