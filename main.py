@@ -220,5 +220,5 @@ if __name__ == '__main__':
     app.run(
         host='0.0.0.0',  # 允许外部访问
         port=8000,       # 端口号
-        debug=True       # 开启调试模式
+        debug=False       # 开启调试模式
     )
