@@ -1,0 +1,19 @@
+{
+    "car_list": [
+        {
+            "id": 10001,
+            "phone": "13800138001",
+            "push_deer_token": ""
+        },
+        {
+            "id": 10002,
+            "phone": "13800138000",
+            "push_deer_token": ""
+        },
+        {
+            "id": 10003,
+            "phone": "13912345678",
+            "push_deer_token": ""
+        }
+    ]
+} 

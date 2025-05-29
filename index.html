@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>扫码挪车 - 车主挪车</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        .car-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .car-icon::before {
+            content: "🚗";
+            font-size: 36px;
+        }
+
+        .title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: #718096;
+            line-height: 1.5;
+            margin-top: 20px;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 18px 24px;
+            border: none;
+            border-radius: 16px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #4299e1, #3182ce);
+            color: white;
+            box-shadow: 0 6px 20px rgba(66, 153, 225, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #48bb78, #38a169);
+            color: white;
+            box-shadow: 0 6px 20px rgba(72, 187, 120, 0.4);
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.5);
+        }
+
+        .btn:disabled {
+            transform: none !important;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .btn:disabled:hover {
+            transform: none !important;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1) !important;
+        }
+
+        .btn-icon {
+            font-size: 20px;
+        }
+
+        .footer {
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4a5568;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 30px 20px;
+                margin: 10px;
+            }
+            
+            .title {
+                font-size: 24px;
+            }
+            
+            .btn {
+                padding: 16px 20px;
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="car-icon"></div>
+            <h1 class="title">临时停靠，请多关照</h1>
+            <p class="subtitle">很抱歉，挡住了您爱车的去路<br>请您使用下面任意方式通知车主挪车。</p>
+        </div>
+
+        <div class="button-group">
+            <button class="btn btn-primary" id="callBtn">
+                <span class="btn-icon">📞</span>
+                电话联系车主
+            </button>
+            <button class="btn btn-secondary" id="remindBtn">
+                <span class="btn-icon">🔔</span>
+                催一下车主
+            </button>
+        </div>
+
+        <div class="footer">
+            <p>文明出行，互相理解</p>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 频率限制相关变量
+        let lastRemindTime = 0;
+        let lastCallTime = 0;
+        const REMIND_COOLDOWN = 2 * 60 * 1000; // 2分钟冷却时间
+        const CALL_COOLDOWN = 2 * 60 * 1000; // 2分钟冷却时间
+
+        // 获取URL参数
+        function getUrlParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // 获取车辆ID
+        const carId = getUrlParameter('car_id');
+
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 获取车辆详情信息
+        async function getCarDetail(carId) {
+            try {
+                const response = await fetch(`/car-detail?id=${carId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    return result.data;
+                } else {
+                    showToast(result.message);
+                    return null;
+                }
+            } catch (error) {
+                console.error('获取车辆信息失败:', error);
+                showToast('获取车辆信息失败，请稍后重试');
+                return null;
+            }
+        }
+
+        // 更新电话按钮状态
+        function updateCallButton() {
+            const callBtn = document.getElementById('callBtn');
+            const currentTime = Date.now();
+            const timeSinceLastCall = currentTime - lastCallTime;
+            
+            if (timeSinceLastCall < CALL_COOLDOWN) {
+                // 仍在冷却期
+                const remainingTime = Math.ceil((CALL_COOLDOWN - timeSinceLastCall) / 1000);
+                const minutes = Math.floor(remainingTime / 60);
+                const seconds = remainingTime % 60;
+                
+                callBtn.disabled = true;
+                callBtn.style.opacity = '0.5';
+                callBtn.style.cursor = 'not-allowed';
+                callBtn.innerHTML = `<span class="btn-icon">⏱️</span>请等待 ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // 继续倒计时
+                setTimeout(updateCallButton, 1000);
+            } else {
+                // 冷却结束
+                callBtn.disabled = false;
+                callBtn.style.opacity = '1';
+                callBtn.style.cursor = 'pointer';
+                callBtn.innerHTML = '<span class="btn-icon">📞</span>电话联系车主';
+            }
+        }
+
+        // 更新催促按钮状态
+        function updateRemindButton() {
+            const remindBtn = document.getElementById('remindBtn');
+            const currentTime = Date.now();
+            const timeSinceLastRemind = currentTime - lastRemindTime;
+            
+            if (timeSinceLastRemind < REMIND_COOLDOWN) {
+                // 仍在冷却期
+                const remainingTime = Math.ceil((REMIND_COOLDOWN - timeSinceLastRemind) / 1000);
+                const minutes = Math.floor(remainingTime / 60);
+                const seconds = remainingTime % 60;
+                
+                remindBtn.disabled = true;
+                remindBtn.style.opacity = '0.5';
+                remindBtn.style.cursor = 'not-allowed';
+                remindBtn.innerHTML = `<span class="btn-icon">⏱️</span>请等待 ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                // 继续倒计时
+                setTimeout(updateRemindButton, 1000);
+            } else {
+                // 冷却结束
+                remindBtn.disabled = false;
+                remindBtn.style.opacity = '1';
+                remindBtn.style.cursor = 'pointer';
+                remindBtn.innerHTML = '<span class="btn-icon">🔔</span>催一下车主';
+            }
+        }
+
+        // 发送挪车通知
+        async function sendNotification(carId) {
+            try {
+                const response = await fetch(`/notify-car?id=${carId}`);
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('挪车通知发送成功');
+                    return true;
+                } else {
+                    showToast(result.message);
+                    return false;
+                }
+            } catch (error) {
+                console.error('发送通知失败:', error);
+                showToast('发送通知失败，请稍后重试');
+                return false;
+            }
+        }
+
+        // 电话通知车主按钮点击事件
+        document.getElementById('callBtn').addEventListener('click', async function() {
+            const currentTime = Date.now();
+            const timeSinceLastCall = currentTime - lastCallTime;
+            
+            // 检查是否在冷却期内
+            if (timeSinceLastCall < CALL_COOLDOWN) {
+                const remainingMinutes = Math.ceil((CALL_COOLDOWN - timeSinceLastCall) / 60000);
+                showToast(`请等待${remainingMinutes}分钟后再拨打电话`);
+                return;
+            }
+
+            // 检查是否有车辆ID
+            if (!carId) {
+                showToast('缺少车辆ID信息');
+                return;
+            }
+            
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+            
+            showToast('正在获取车主电话...');
+            
+            // 获取车辆详情
+            const carDetail = await getCarDetail(carId);
+            if (carDetail && carDetail.phone) {
+                // 更新最后拨打时间
+                lastCallTime = currentTime;
+                
+                showToast('正在拨打车主电话...');
+                
+                // 开始倒计时
+                updateCallButton();
+                
+                // 拨打电话
+                setTimeout(() => {
+                    window.location.href = `tel:${carDetail.phone}`;
+                }, 1000);
+            }
+        });
+
+        // 催一下车主按钮点击事件
+        document.getElementById('remindBtn').addEventListener('click', async function() {
+            const currentTime = Date.now();
+            const timeSinceLastRemind = currentTime - lastRemindTime;
+            
+            // 检查是否在冷却期内
+            if (timeSinceLastRemind < REMIND_COOLDOWN) {
+                const remainingMinutes = Math.ceil((REMIND_COOLDOWN - timeSinceLastRemind) / 60000);
+                showToast(`请等待${remainingMinutes}分钟后再催促`);
+                return;
+            }
+
+            // 检查是否有车辆ID
+            if (!carId) {
+                showToast('缺少车辆ID信息');
+                return;
+            }
+            
+            this.style.transform = 'scale(0.95)';
+            setTimeout(() => {
+                this.style.transform = '';
+            }, 150);
+            
+            showToast('正在发送挪车通知...');
+            
+            // 发送通知
+            const success = await sendNotification(carId);
+            if (success) {
+                // 更新最后催促时间
+                lastRemindTime = currentTime;
+                
+                // 开始倒计时
+                updateRemindButton();
+            }
+        });
+
+        // 页面加载时检查车辆ID
+        window.addEventListener('load', function() {
+            document.querySelector('.container').style.opacity = '1';
+            
+            if (!carId) {
+                showToast('警告：缺少车辆ID参数');
+            } else {
+                console.log('当前车辆ID:', carId);
+            }
+        });
+    </script>
+</body>
+</html> 
