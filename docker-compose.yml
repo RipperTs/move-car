@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  nuoche-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nuoche-code-app
+    ports:
+      - "8000:8000"
+    volumes:
+      # 挂载配置文件，方便修改车辆信息
+      - ./config.json:/app/config.json:ro
+      # 可选：挂载日志目录
+      - ./logs:/app/logs
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nuoche-network
+
+networks:
+  nuoche-network:
+    driver: bridge 
