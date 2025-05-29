@@ -2,9 +2,7 @@ version: '3.8'
 
 services:
   nuoche-app:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: registry.cn-hangzhou.aliyuncs.com/ripper/move-car:latest
     container_name: nuoche-code-app
     ports:
       - "8000:8000"
